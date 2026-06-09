@@ -220,7 +220,7 @@ const ProjectsSection = () => {
         </motion.div>
 
         {/* Stacked Cards Layout */}
-        <div className="flex flex-col gap-8 relative pb-20 max-w-5xl 2xl:max-w-7xl mx-auto">          
+        <div className="flex flex-col gap-8 relative pb-20 max-w-5xl 2xl:max-w-7xl mx-auto overflow-visible">          
           {filtered.map((project, i) => {
             const isEven = i % 2 === 0;
             return (
@@ -228,10 +228,10 @@ const ProjectsSection = () => {
                 key={project.slug}
                 id={`${PROJECT_ANCHOR_PREFIX}${project.slug}`}
                 data-project-slug={project.slug}
-                className="scroll-mt-28 w-full sticky"
+                className="scroll-mt-28 w-full sticky h-fit"
                 initial={{ opacity: 0, y: 80 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
+                viewport={{ once: true, amount: 0.15 }}
                 transition={{
                   duration: 0.8,
                   ease: [0.22, 1, 0.36, 1],
@@ -240,6 +240,7 @@ const ProjectsSection = () => {
                 style={{
                   top: `calc(10vh + ${i * 30}px)`,
                   zIndex: i,
+                  height: 'auto',
                 }}
               >
                 <SpotlightCard className="w-full relative bg-background dark:bg-background border-black/10 dark:border-white/10 backdrop-blur-none backdrop-saturate-100">
