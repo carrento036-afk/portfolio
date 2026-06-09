@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { ExternalLink, Github, Maximize2 } from "lucide-react";
 import { projects, type Project } from "@/data/portfolio";
@@ -158,6 +158,104 @@ function ProjectShowcase({
   );
 }
 
+function StachedCardItem({ project, index, totalProjects, onOpenViewer }: { project: Project; index: number; totalProjects: number; onOpenViewer: (project: Project, index: number) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isInViewport, setIsInViewport] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInViewport(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const isEven = index % 2 === 0;
+
+  return (
+    <motion.div
+      ref={ref}
+      key={project.slug}
+      id={`${PROJECT_ANCHOR_PREFIX}${project.slug}`}
+      data-project-slug={project.slug}
+      className="scroll-mt-28 w-full sticky"
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 80 }}
+      animate={isInViewport ? { opacity: 1, y: 0 } : { opacity: 0, y: 80 }}
+      transition={{
+        duration: shouldReduceMotion ? 0.2 : 0.8,
+        ease: [0.22, 1, 0.36, 1],
+        delay: shouldReduceMotion ? 0 : index * 0.1,
+      }}
+      style={{
+        top: `calc(10vh + ${index * 30}px)`,
+        zIndex: index,
+      }}
+    >
+      <SpotlightCard className="w-full relative bg-background dark:bg-background border-black/10 dark:border-white/10 backdrop-blur-none backdrop-saturate-100">
+        <div className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} min-h-[450px]`}>
+
+          {/* Content Section */}
+          <div className="p-6 sm:p-8 lg:p-12 flex flex-col justify-center flex-1 lg:w-1/2 static z-10">
+            <span className="text-xs font-mono uppercase tracking-widest text-primary mb-4 block">
+              {project.category}
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 tracking-tight leading-tight">{project.title}</h3>
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6 sm:mb-8 flex-1 text-pretty">
+              {project.description}
+            </p>
+            
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-6 sm:mb-8">
+              {project.tech.map((t, idx) => (
+                <span
+                  key={t}
+                  className="px-3 py-1.5 rounded-lg text-xs font-mono bg-gradient-to-r from-primary/10 to-accent-secondary/5 text-primary border border-primary/25 backdrop-blur-sm hover:border-primary/40 transition-colors"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-3 sm:gap-6 mt-auto">
+              <a
+                href={project.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors hover:bg-primary/10 px-4 py-2 rounded-lg -ml-4"
+              >
+                <Github className="w-5 h-5" />
+                Source Code
+              </a>
+              {project.live && (
+                <a
+                  href={project.live}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors hover:bg-primary/10 px-4 py-2 rounded-lg"
+                >
+                  <ExternalLink className="w-5 h-5" />
+                  Live Demo
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Image / Carousel Showcase Section */}
+          <ProjectShowcase project={project} priority={index === 0} onOpenViewer={onOpenViewer} />
+
+        </div>
+      </SpotlightCard>
+    </motion.div>
+  );
+}
+
 const ProjectsSection = () => {
   const [filter, setFilter] = useState("All");
   const [viewerState, setViewerState] = useState<{ open: boolean; project: Project | null; index: number }>({
@@ -220,85 +318,16 @@ const ProjectsSection = () => {
         </motion.div>
 
         {/* Stacked Cards Layout */}
-        <div className="flex flex-col gap-8 relative pb-20 max-w-5xl 2xl:max-w-7xl mx-auto overflow-visible">          
-          {filtered.map((project, i) => {
-            const isEven = i % 2 === 0;
-            return (
-              <motion.div
-                key={project.slug}
-                id={`${PROJECT_ANCHOR_PREFIX}${project.slug}`}
-                data-project-slug={project.slug}
-                className="scroll-mt-28 w-full sticky h-fit"
-                initial={{ opacity: 0, y: 80 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{
-                  duration: 0.8,
-                  ease: [0.22, 1, 0.36, 1],
-                  delay: i * 0.1,
-                }}
-                style={{
-                  top: `calc(10vh + ${i * 30}px)`,
-                  zIndex: i,
-                  height: 'auto',
-                }}
-              >
-                <SpotlightCard className="w-full relative bg-background dark:bg-background border-black/10 dark:border-white/10 backdrop-blur-none backdrop-saturate-100">
-                  <div className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} min-h-[450px]`}>
-
-                    {/* Content Section */}
-                    <div className="p-6 sm:p-8 lg:p-12 flex flex-col justify-center flex-1 lg:w-1/2 static z-10">
-                      <span className="text-xs font-mono uppercase tracking-widest text-primary mb-4 block">
-                        {project.category}
-                      </span>
-                      <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 tracking-tight leading-tight">{project.title}</h3>
-                      <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6 sm:mb-8 flex-1 text-pretty">
-                        {project.description}
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-6 sm:mb-8">
-                        {project.tech.map((t, idx) => (
-                          <span
-                            key={t}
-                            className="px-3 py-1.5 rounded-lg text-xs font-mono bg-gradient-to-r from-primary/10 to-accent-secondary/5 text-primary border border-primary/25 backdrop-blur-sm hover:border-primary/40 transition-colors"
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                      
-                      <div className="flex flex-wrap items-center gap-3 sm:gap-6 mt-auto">
-                        <a
-                          href={project.github}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors hover:bg-primary/10 px-4 py-2 rounded-lg -ml-4"
-                        >
-                          <Github className="w-5 h-5" />
-                          Source Code
-                        </a>
-                        {project.live && (
-                          <a
-                            href={project.live}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors hover:bg-primary/10 px-4 py-2 rounded-lg"
-                          >
-                            <ExternalLink className="w-5 h-5" />
-                            Live Demo
-                          </a>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Image / Carousel Showcase Section */}
-                    <ProjectShowcase project={project} priority={i === 0} onOpenViewer={handleOpenViewer} />
-
-                  </div>
-                </SpotlightCard>
-              </motion.div>
-            );
-          })}
+        <div className="flex flex-col gap-8 relative pb-20 max-w-5xl 2xl:max-w-7xl mx-auto">          
+          {filtered.map((project, i) => (
+            <StachedCardItem
+              key={project.slug}
+              project={project}
+              index={i}
+              totalProjects={filtered.length}
+              onOpenViewer={handleOpenViewer}
+            />
+          ))}
         </div>
 
         {/* View more on GitHub */}
