@@ -68,13 +68,15 @@
   html {
     position: relative;
     scroll-padding-top: calc(5rem + env(safe-area-inset-top));
-    overflow-x: hidden;
+    /* `clip` (not `hidden`) prevents html/body from becoming scroll containers,
+       which would otherwise break `position: sticky` on descendants. */
+    overflow-x: clip;
   }
   body {
     position: relative;
     @apply bg-background text-foreground font-sans antialiased;
     overflow-wrap: break-word;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 }
 /* Custom cursors */

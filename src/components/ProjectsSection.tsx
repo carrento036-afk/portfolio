@@ -219,79 +219,89 @@ const ProjectsSection = () => {
           </div>
         </motion.div>
 
-        {/* Stacked Cards Layout - Use simple fade-in on scroll instead of sticky */}
-        <div className="flex flex-col gap-8 relative pb-20 max-w-5xl 2xl:max-w-7xl mx-auto">          
+        {/* Stacked Cards Layout - sticky stacking on large screens, normal flow on mobile */}
+        <div className="flex flex-col gap-8 lg:gap-16 relative pb-20 max-w-5xl 2xl:max-w-7xl mx-auto">
           {filtered.map((project, i) => {
             const isEven = i % 2 === 0;
+            // On large screens each card pins with an incremental top offset and a
+            // higher z-index than the one before it, so the next card slides up and
+            // covers the previous one while leaving a peeking edge (the "stack" effect).
+            const stickyStyle = shouldReduceMotion
+              ? undefined
+              : { top: `calc(6rem + ${i * 1.75}rem)`, zIndex: i + 1 };
             return (
-              <motion.div
+              <div
                 key={project.slug}
                 id={`${PROJECT_ANCHOR_PREFIX}${project.slug}`}
                 data-project-slug={project.slug}
-                className="scroll-mt-28 w-full"
-                initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 40 }}
-                whileInView={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{
-                  duration: shouldReduceMotion ? 0.2 : 0.6,
-                  ease: [0.22, 1, 0.36, 1],
-                  delay: i * 0.05,
-                }}
+                className={`scroll-mt-28 w-full ${shouldReduceMotion ? "" : "lg:sticky"}`}
+                style={stickyStyle}
               >
-                <SpotlightCard className="w-full relative bg-background dark:bg-background border-black/10 dark:border-white/10 backdrop-blur-none backdrop-saturate-100">
-                  <div className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} min-h-[450px]`}>
+                <motion.div
+                  initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 40 }}
+                  whileInView={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{
+                    duration: shouldReduceMotion ? 0.2 : 0.6,
+                    ease: [0.22, 1, 0.36, 1],
+                    delay: i * 0.05,
+                  }}
+                >
+                  <SpotlightCard className="w-full relative bg-background dark:bg-background border-black/10 dark:border-white/10 backdrop-blur-none backdrop-saturate-100">
+                    <div className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} min-h-[450px]`}>
 
-                    {/* Content Section */}
-                    <div className="p-6 sm:p-8 lg:p-12 flex flex-col justify-center flex-1 lg:w-1/2 static z-10">
-                      <span className="text-xs font-mono uppercase tracking-widest text-primary mb-4 block">
-                        {project.category}
-                      </span>
-                      <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 tracking-tight leading-tight">{project.title}</h3>
-                      <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6 sm:mb-8 flex-1 text-pretty">
-                        {project.description}
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-6 sm:mb-8">
-                        {project.tech.map((t, idx) => (
-                          <span
-                            key={t}
-                            className="px-3 py-1.5 rounded-lg text-xs font-mono bg-gradient-to-r from-primary/10 to-accent-secondary/5 text-primary border border-primary/25 backdrop-blur-sm hover:border-primary/40 transition-colors"
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                      
-                      <div className="flex flex-wrap items-center gap-3 sm:gap-6 mt-auto">
-                        <a
-                          href={project.github}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors hover:bg-primary/10 px-4 py-2 rounded-lg -ml-4"
-                        >
-                          <Github className="w-5 h-5" />
-                          Source Code
-                        </a>
-                        {project.live && (
+                      {/* Content Section */}
+                      <div className="p-6 sm:p-8 lg:p-12 flex flex-col justify-center flex-1 lg:w-1/2 static z-10">
+                        <span className="text-xs font-mono uppercase tracking-widest text-primary mb-4 block">
+                          {project.category}
+                        </span>
+                        <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 tracking-tight leading-tight">{project.title}</h3>
+                        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6 sm:mb-8 flex-1 text-pretty">
+                          {project.description}
+                        </p>
+
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-6 sm:mb-8">
+                          {project.tech.map((t) => (
+                            <span
+                              key={t}
+                              className="px-3 py-1.5 rounded-lg text-xs font-mono bg-gradient-to-r from-primary/10 to-accent-secondary/5 text-primary border border-primary/25 backdrop-blur-sm hover:border-primary/40 transition-colors"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-6 mt-auto">
                           <a
-                            href={project.live}
+                            href={project.github}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors hover:bg-primary/10 px-4 py-2 rounded-lg"
+                            className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors hover:bg-primary/10 px-4 py-2 rounded-lg -ml-4"
                           >
-                            <ExternalLink className="w-5 h-5" />
-                            Live Demo
+                            <Github className="w-5 h-5" />
+                            Source Code
                           </a>
-                        )}
+                          {project.live && (
+                            <a
+                              href={project.live}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors hover:bg-primary/10 px-4 py-2 rounded-lg"
+                            >
+                              <ExternalLink className="w-5 h-5" />
+                              Live Demo
+                            </a>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Image / Carousel Showcase Section */}
+                      <ProjectShowcase project={project} priority={i === 0} onOpenViewer={handleOpenViewer} />
+
                     </div>
-
-                    {/* Image / Carousel Showcase Section */}
-                    <ProjectShowcase project={project} priority={i === 0} onOpenViewer={handleOpenViewer} />
-
-                  </div>
-                </SpotlightCard>
-              </motion.div>
+                  </SpotlightCard>
+                </motion.div>
+              </div>
             );
           })}
         </div>
